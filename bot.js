@@ -1,4 +1,6 @@
 const fs = require('fs')
+const ffmpegPath = require('ffmpeg-static')
+const shell = require('shelljs')
 
 class Bot {
     /***** Properties *****/
@@ -27,10 +29,30 @@ class Bot {
         },
 
         // Play sound to voice channel
-        sound: (msg) => {
+        sound: (msg, args) => {
             if(this.VoiceConnection == null) return;
+            this.playSound(args[0]);
+        },
 
-            this.playSound('kekw');
+        convertLast: (msg) => {
+            fs.readdir(process.env.RECORDINGS_PATH, (err, files) => {
+                var latestFile = null;
+                var latestNumber = 0;
+
+                files.forEach(file => {
+                    var fileSeconds = file.substring(file.lastIndexOf("_") + 1);
+                    if(fileSeconds > latestNumber)
+                    {
+                        latestFile = file;
+                        latestNumber = fileSeconds;
+                    }
+                });
+                shell.exec(ffmpegPath + ' -f s32le -ar 44100 -ac 1 -i ' + 
+                //Input
+                process.env.RECORDINGS_PATH + latestFile + ' ' + 
+                //Output
+                process.env.CONVERTED_RECORDINGS_PATH + latestFile +'.wav')
+              });
         },
 
         listen: (msg) => {
@@ -39,8 +61,8 @@ class Bot {
 
             const user = msg.member.user;
 
-            const audioStream = this.VoiceConnection.receiver.createStream(user.id, { end: 'manual' });
-            const outputStream = fs.createWriteStream(process.env.REPOSITORY_PATH + user.username + "_" + new Date().getTime());
+            const audioStream = this.VoiceConnection.receiver.createStream(user.id, { end: 'manual', mode: 'pcm' });
+            const outputStream = fs.createWriteStream(process.env.RECORDINGS_PATH + user.username + "_" + new Date().getTime());
             audioStream.pipe(outputStream);
 
             this.AudioStreamList.push({ user: user, audioStream: audioStream });
@@ -56,7 +78,7 @@ class Bot {
     async playSound(fileName) {
         if(this.VoiceConnection == null) return;
 
-        const dispatcher = await this.VoiceConnection.play(process.env.REPOSITORY_PATH + fileName + '.mp3', { volume: 0.5 });
+        const dispatcher = await this.VoiceConnection.play(process.env.REPOSITORY_PATH + "playsounds/" + fileName + '.mp3', { volume: 0.5 });
     }
 }
 

@@ -14,9 +14,9 @@ client.on('message', msg => {
     if(msg.content.length == 0) return;
     if(msg.content[0] != process.env.BOT_COMMANDPREFIX) return;
 
-    var commandName = msg.content.slice(1);
+    var commandName = msg.content.split(' ')[0].substring(process.env.BOT_COMMANDPREFIX.length);
     var isCommandFound = Object.keys(Bot.commands).indexOf(commandName) != -1;
-
+    
     var args = msg.content.split(' ').slice(1);
 
     if(isCommandFound) {
