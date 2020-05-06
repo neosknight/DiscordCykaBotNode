@@ -1,12 +1,12 @@
 const fs = require('fs')
 
-module.exports = {
+class Bot {
     /***** Properties *****/
-    VoiceConnection: null,
-    AudioStreamList: null,
+    VoiceConnection = null;
+    AudioStreamList = null;
 
     /***** Commands *****/
-    commands: {
+    commands = {
         // cyka - BLYAT
         cyka: (msg) => {
             msg.reply('BLYAT');
@@ -18,6 +18,8 @@ module.exports = {
     
             if(msg.member.voice.channel) {
                 this.VoiceConnection = await msg.member.voice.channel.join();
+
+                await this.playSound('lakad');
             }
             else {
                 msg.reply('You need to be in a voice channel first!');
@@ -28,7 +30,7 @@ module.exports = {
         sound: (msg) => {
             if(this.VoiceConnection == null) return;
 
-            const dispatcher = this.VoiceConnection.play(process.env.REPOSITORY_PATH + 'kekw.mp3', { volume: 0.5 });
+            this.playSound('kekw');
         },
 
         listen: (msg) => {
@@ -40,19 +42,22 @@ module.exports = {
             const audioStream = this.VoiceConnection.receiver.createStream(user.id, { end: 'manual' });
             const outputStream = fs.createWriteStream(process.env.REPOSITORY_PATH + user.username + "_" + new Date().getTime());
             audioStream.pipe(outputStream);
-            
-            audioStream.on('data', (chunk) => {
-                console.log(`Received ${chunk.length} bytes of data.`);
-            });
-            audioStream.on('end', () => { console.log("Stopped listening"); })
-            outputStream.on('data', (data) => { console.log(data); });
 
             this.AudioStreamList.push({ user: user, audioStream: audioStream });
         }
-    },
-    
+    };
+
     /***** Methods *****/
-    initialize: () => {
+    initialize() {
+        this.VoiceConnection = null;
         this.AudioStreamList = new Array();
     }
+
+    async playSound(fileName) {
+        if(this.VoiceConnection == null) return;
+
+        const dispatcher = await this.VoiceConnection.play(process.env.REPOSITORY_PATH + fileName + '.mp3', { volume: 0.5 });
+    }
 }
+
+module.exports = new Bot();

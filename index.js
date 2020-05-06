@@ -21,7 +21,7 @@ client.on('message', msg => {
 
     if(isCommandFound) {
         Bot.commands[commandName](msg, args);
-    }    
+    }
 });
 
 client.login(process.env.BOT_TOKEN);
