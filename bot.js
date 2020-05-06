@@ -1,6 +1,9 @@
+const fs = require('fs')
+
 module.exports = {
     /***** Properties *****/
     VoiceConnection: null,
+    AudioStreamList: null,
 
     /***** Commands *****/
     commands: {
@@ -26,8 +29,30 @@ module.exports = {
             if(this.VoiceConnection == null) return;
 
             const dispatcher = this.VoiceConnection.play(process.env.REPOSITORY_PATH + 'kekw.mp3', { volume: 0.5 });
+        },
+
+        listen: (msg) => {
+            if(!msg.guild) return;
+            if(this.VoiceConnection == null) return;
+
+            const user = msg.member.user;
+
+            const audioStream = this.VoiceConnection.receiver.createStream(user.id, { end: 'manual' });
+            const outputStream = fs.createWriteStream(process.env.REPOSITORY_PATH + user.username + "_" + new Date().getTime());
+            audioStream.pipe(outputStream);
+            
+            audioStream.on('data', (chunk) => {
+                console.log(`Received ${chunk.length} bytes of data.`);
+            });
+            audioStream.on('end', () => { console.log("Stopped listening"); })
+            outputStream.on('data', (data) => { console.log(data); });
+
+            this.AudioStreamList.push({ user: user, audioStream: audioStream });
         }
-    }
+    },
     
     /***** Methods *****/
+    initialize: () => {
+        this.AudioStreamList = new Array();
+    }
 }
