@@ -1,11 +1,51 @@
 const fs = require('fs')
 const ffmpegPath = require('ffmpeg-static')
 const shell = require('shelljs')
+const axios = require('axios')
+
+class VoiceStream {
+    user = null;
+    audioStream = null;
+    buffer = null;
+    
+    bufferSize = 1024 * 280;
+    bufferLength = 0;
+
+    onVoiceReceived = null;
+
+    constructor(user, audioStream, onVoiceReceived = null) {
+        this.user = user;
+        this.audioStream = audioStream;
+        this.onVoiceReceived = onVoiceReceived;
+        this.buffer = new Array(this.bufferSize);
+    
+        this.initializeBuffer();
+        this.wireEvents();
+    }
+
+    initializeBuffer() {
+        this.bufferLength = 0;
+        this.buffer.forEach((e, i) => { this.buffer[i] = 0; });
+    }
+
+    wireEvents() {
+        this.audioStream.on('data', async (chunk) => {
+            this.buffer = this.buffer.slice(chunk.length).concat(chunk);
+            this.bufferLength += chunk.length;
+
+            if(this.bufferLength >= this.bufferSize) {
+                await this.onVoiceReceived(this.buffer);
+
+                this.initializeBuffer();
+            }
+        });
+    }
+}
 
 class Bot {
     /***** Properties *****/
     VoiceConnection = null;
-    AudioStreamList = null;
+    VoiceStreamList = null;
 
     /***** Commands *****/
     commands = {
@@ -65,20 +105,25 @@ class Bot {
             const outputStream = fs.createWriteStream(process.env.RECORDINGS_PATH + user.username + "_" + new Date().getTime());
             audioStream.pipe(outputStream);
 
-            this.AudioStreamList.push({ user: user, audioStream: audioStream });
+            this.VoiceStreamList.push(new VoiceStream(user, audioStream, this.onVoiceReceived));
         }
     };
 
     /***** Methods *****/
     initialize() {
         this.VoiceConnection = null;
-        this.AudioStreamList = new Array();
+        this.VoiceStreamList = new Array();
     }
 
     async playSound(fileName) {
         if(this.VoiceConnection == null) return;
 
         const dispatcher = await this.VoiceConnection.play(process.env.REPOSITORY_PATH + "playsounds/" + fileName + '.mp3', { volume: 0.5 });
+    }
+
+    async onVoiceReceived(buffer) {
+        // Send data to API
+        console.log(buffer);
     }
 }
 

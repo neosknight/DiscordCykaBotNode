@@ -4,6 +4,10 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const Bot = require('./bot.js');
 
+const express = require('express');
+var expressApp = express();
+
+// Bot
 Bot.initialize();
 
 client.on('ready', () => {
@@ -25,3 +29,10 @@ client.on('message', msg => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
+// Express web server
+expressApp.get('/hello', (req, res) => {
+    res.send('<h1>Hello world!</h1>');
+});
+
+expressApp.listen(3000);

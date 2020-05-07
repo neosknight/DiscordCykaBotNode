@@ -15,8 +15,10 @@
   "author": "neosknight",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.2",
     "discord.js": "^12.2.0",
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "ffmpeg-static": "^4.2.1",
     "opusscript": "0.0.7",
     "shelljs": "^0.8.4"
