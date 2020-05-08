@@ -3,10 +3,7 @@ require('dotenv').config()
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const Bot = require('./bot.js');
-
-const express = require('express');
-var expressApp = express();
-
+const Router = require('./web/router.js');
 // Bot
 Bot.initialize();
 
@@ -30,9 +27,5 @@ client.on('message', msg => {
 
 client.login(process.env.BOT_TOKEN);
 
-// Express web server
-expressApp.get('/hello', (req, res) => {
-    res.send('<h1>Hello world!</h1>');
-});
+Router.initialize(Bot);
 
-expressApp.listen(3000);
