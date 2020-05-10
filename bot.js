@@ -70,6 +70,8 @@ class Bot {
     youtubeQueue = null;
     youtubeLoopInterval = null;
 
+    currentDispatcher = null;
+
     /***** Commands *****/
     commands = {
         // cyka - BLYAT
@@ -196,7 +198,7 @@ class Bot {
 
     playNextFromYoutubeQueue() {
         if(this.youtubeQueue.length > 0) {
-            this.VoiceConnection.play(ytdl(this.youtubeQueue[0], { filter: 'audioonly' }));
+            this.currentDispatcher = this.VoiceConnection.play(ytdl(this.youtubeQueue[0], { filter: 'audioonly'}), { volume: 0.2 });
         }
     }
 

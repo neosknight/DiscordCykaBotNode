@@ -1,0 +1,72 @@
+html
+    head
+      title Youtube
+      meta(name="viewport" content="width=device-width, initial-scale=1")
+      link(href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css", rel="stylesheet", integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh", crossorigin="anonymous")
+
+      script(src="https://code.jquery.com/jquery-3.5.1.min.js")
+      script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js", integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6", crossorigin="anonymous")
+      script(src="/app.js")
+    body
+    div(class='container')
+
+      h3 Controls
+      div(class="row")
+        div(class="col-12 p-3") 
+          span Current Volume : 
+            span(id="current_value")=volume * 100
+          br  
+          span Slider Value : 
+            span(id="slider_value")=volume * 100 
+          div(class="form-group")
+            label(for="volume_control_slider")
+            input(type="range" class="form-control-range" id="volume_control_slider" value=volume * 100)
+        
+        div(class="col-12 p-2")
+          if !active
+            form(action="/youtube/power/1" method="POST" style="display:inline")
+              button(type="submit" class="btn btn-success") On
+          else
+            form(action="/youtube/power/0" method="POST" style="display:inline")
+              button(type="submit" class="btn btn-danger") Off
+          
+          button(class="btn btn-info ml-3" onclick="pause()") Pause
+          button(class="btn btn-info ml-3" onclick="play()") Play
+          button(class="btn btn-info ml-3" onclick="changeVolume()") Change Volume
+
+      div(class="row")
+        hr(class="col-12")
+
+      div(class="row")
+        div(class="col-12")
+          form(action="/youtube/add" method="POST")
+            div(class="form-group")
+              label Youtube Link
+              input(type="text" name="link" class="form-control")
+            button(type="submit" class="btn btn-success") Add to Queue
+      
+      div(class="row")
+        hr(class="col-12")
+
+      h3 Queue
+      div(class='row')
+          each value, index in queue
+            div(class="col-12 col-md-4  p-3")
+              form(action="/youtube/delete/" + index  method="POST")
+                button(type="submit" class="btn btn-danger")  X 
+              div(class="embed-responsive embed-responsive-16by9")
+                iframe(class="embed-responsive-item" src=value.replace("watch?v=", "embed/") allowfullscreen)
+
+
+      
+          
+
+
+
+
+
+
+
+
+
+
