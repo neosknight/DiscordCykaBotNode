@@ -1,6 +1,10 @@
 const express = require('express');
 var expressApp = express();
 
+//Multer
+var multer  = require('multer')
+var upload = multer({ dest: 'repository/temp' })
+
 const fs = require('fs');
 
 class Router{
@@ -18,9 +22,23 @@ class Router{
                 res.render('playsounds', { files: files });
               });
         });
+        
+        
+        expressApp.post('/playsounds/upload', upload.single('playsound'), (req, res) => {
+            
+            if(req.file.originalname.indexOf(".mp3") != -1)
+                fs.rename(req.file.path, process.env.REPOSITORY_PATH + "playsounds/" + req.file.originalname, function (err) {
+                    res.redirect('/playsounds');
+                });
+            else
+                res.redirect('/playsounds');
+            
+        });
+
         expressApp.post('/playsounds/:playsound', (req, res) => {
             this.Bot.commands["sound"](null, [req.params.playsound]);
         });
+
 
         expressApp.listen(3000);
     }

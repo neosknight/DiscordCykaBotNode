@@ -1,18 +1,31 @@
 html
     head
       title Playsounds
+      meta(name="viewport" content="width=device-width, initial-scale=1")
       link(href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css", rel="stylesheet", integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh", crossorigin="anonymous")
 
       script(src="https://code.jquery.com/jquery-3.5.1.min.js")
       script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js", integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6", crossorigin="anonymous")
-      script(src="app.js")
+      script(src="/app.js")
     body
     div(class='container')
       div(class='row')
         each value in files
-          div(class='col-3 col-md-2')
+          div(class='col-6 col-md-2')
             button(type="button" class="btn btn-success m-5" onclick="playsound('" + value.substring(0, value.indexOf('.')) + "')") 
               span=value
+
+      div(class="row")
+        hr(class="col-12")
+
+      div(class="row")
+        div(class="col-12")
+          form(action="/playsounds/upload" method="POST" enctype="multipart/form-data")
+            div(class="form-group")
+              label Choose Playsound
+              input(type="file" name="playsound" class="form-control-file")
+            button(type="submit" class="btn btn-success") Upload
+          
 
 
 
