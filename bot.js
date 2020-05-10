@@ -2,6 +2,7 @@ const fs = require('fs')
 const ffmpegPath = require('ffmpeg-static')
 const shell = require('shelljs')
 const axios = require('axios')
+const ytdl = require('ytdl-core')
 
 class VoiceStream {
     user = null;
@@ -65,6 +66,10 @@ class Bot {
     VoiceConnection = null;
     VoiceStreamList = null;
 
+    isYoutubeActive = false;
+    youtubeQueue = null;
+    youtubeLoopInterval = null;
+
     /***** Commands *****/
     commands = {
         // cyka - BLYAT
@@ -78,6 +83,10 @@ class Bot {
     
             if(msg.member.voice.channel) {
                 this.VoiceConnection = await msg.member.voice.channel.join();
+                this.VoiceConnection.on('speaking', (user, speaking) => {
+                    console.log(speaking);
+                    console.log(user);
+                });
 
                 await this.playSound('lakad');
             }
@@ -124,6 +133,50 @@ class Bot {
             audioStream.pipe(outputStream);
 
             this.VoiceStreamList.push(new VoiceStream(user, audioStream, this));
+        },
+
+        youtube: (msg, args) => {
+            if(args.length == 0) return;
+
+            switch(args[0]) {
+                case 'add':
+                    if(args.length > 1) this.youtubeQueue.push(args[1]);
+                    break;
+                
+                case 'remove':
+                    if(args.length > 1) {
+                        var index = parseInt(args[1]);
+                        if(index != NaN && index >= 1 && index <= this.youtubeQueue.length)
+                            this.youtubeQueue.splice(index-1, 1);
+                    }
+                    break;
+
+                case 'on':
+                    if(this.VoiceConnection != null) {
+                        this.activateYoutubeQueue();
+                    }
+                    else {
+                        msg.reply("You should invite me to voice channel first!");
+                    }
+                    break;
+
+                case 'off':
+                    this.isYoutubeActive = false;
+                    if(this.youtubeLoopInterval != null)
+                        clearInterval(this.youtubeLoopInterval);
+                    break;
+
+                case 'list':
+                    var response = "Current list:\n";
+                    for(var i = 0; i < this.youtubeQueue.length; i++)
+                        response += (i+1) + ". " + this.youtubeQueue[i] + "\n";
+                    
+                    msg.reply(response);
+                    break;
+                
+                default:
+                    break;
+            }
         }
     };
 
@@ -131,12 +184,37 @@ class Bot {
     initialize() {
         this.VoiceConnection = null;
         this.VoiceStreamList = new Array();
+        this.youtubeQueue = new Array();
     }
 
     async playSound(fileName) {
+        if(this.isYoutubeActive) return;
         if(this.VoiceConnection == null) return;
 
         const dispatcher = await this.VoiceConnection.play(process.env.REPOSITORY_PATH + "playsounds/" + fileName + '.mp3', { volume: 0.5 });
+    }
+
+    playNextFromYoutubeQueue() {
+        if(this.youtubeQueue.length > 0) {
+            this.VoiceConnection.play(ytdl(this.youtubeQueue[0], { filter: 'audioonly' }));
+        }
+    }
+
+    activateYoutubeQueue() {
+        if(this.youtubeLoopInterval != null)
+            clearInterval(this.youtubeLoopInterval);
+        
+        this.youtubeLoopInterval = setInterval(() => {
+            if(this.VoiceConnection.speaking.bitfield == 0) {
+                if(this.isYoutubeActive && this.youtubeQueue.length > 0)
+                    this.youtubeQueue.splice(0, 1);
+                
+                if(!this.isYoutubeActive)
+                    this.isYoutubeActive = true;
+                
+                this.playNextFromYoutubeQueue();
+            }
+        }, 10000);
     }
 
     async onVoiceReceived(filePath) {
@@ -163,7 +241,6 @@ class Bot {
             }
             catch(e) { console.log(e); }
         });
-
     }
 }
 

@@ -22,6 +22,7 @@
     "ffmpeg-static": "^4.2.1",
     "opusscript": "0.0.7",
     "pug": "^2.0.4",
-    "shelljs": "^0.8.4"
+    "shelljs": "^0.8.4",
+    "ytdl-core": "^2.1.2"
   }
 }
