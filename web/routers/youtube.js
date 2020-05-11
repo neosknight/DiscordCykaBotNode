@@ -2,6 +2,7 @@ class YoutubeRouter{
     
     Bot = null;
     expressApp = null;
+    YoutubeActivated = false;
 
     initialize(Bot, expressApp) {
         this.Bot = Bot;
@@ -9,7 +10,7 @@ class YoutubeRouter{
 
         expressApp.get('/youtube', (req, res) => {
             var volume = Bot.currentDispatcher == null ? 0 : Bot.currentDispatcher.streams.volume.volume;
-            var active = Bot.isYoutubeActive;
+            var active = Bot.isYoutubeActive || this.YoutubeActivated;
             res.render('youtube', { queue: Bot.youtubeQueue, volume :  volume, active: active });
         });
         expressApp.post('/youtube/play/:mode', (req, res) => {
@@ -41,7 +42,7 @@ class YoutubeRouter{
         expressApp.post('/youtube/power/:power', (req, res) => {
             var power = req.params.power == "1" ? "on" : "off";
             this.Bot.commands["youtube"](null, [power]);
-            this.Bot.isYoutubeActive = req.params.power == "1";
+            this.YoutubeActivated = req.params.power == "1";
             res.redirect('/youtube');
         });
     }
