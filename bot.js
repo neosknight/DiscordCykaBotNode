@@ -103,27 +103,6 @@ class Bot {
             this.playSound(args[0]);
         },
 
-        convertLast: (msg) => {
-            fs.readdir(process.env.RECORDINGS_PATH, (err, files) => {
-                var latestFile = null;
-                var latestNumber = 0;
-
-                files.forEach(file => {
-                    var fileSeconds = file.substring(file.lastIndexOf("_") + 1);
-                    if(fileSeconds > latestNumber)
-                    {
-                        latestFile = file;
-                        latestNumber = fileSeconds;
-                    }
-                });
-                shell.exec(ffmpegPath + ' -f s32le -ar 44100 -ac 1 -i ' + 
-                //Input
-                process.env.RECORDINGS_PATH + latestFile + ' ' + 
-                //Output
-                process.env.CONVERTED_RECORDINGS_PATH + latestFile +'.wav')
-              });
-        },
-
         listen: (msg) => {
             if(!msg.guild) return;
             if(this.VoiceConnection == null) return;
@@ -142,7 +121,8 @@ class Bot {
 
             switch(args[0]) {
                 case 'add':
-                    if(args.length > 1) this.youtubeQueue.push(args[1]);
+                    if(args.length > 1) 
+                        this.addToYoutubeQueue(args[1]);
                     break;
                 
                 case 'remove':
@@ -154,18 +134,11 @@ class Bot {
                     break;
 
                 case 'on':
-                    if(this.VoiceConnection != null) {
-                        this.activateYoutubeQueue();
-                    }
-                    else {
-                        msg.reply("You should invite me to voice channel first!");
-                    }
+                    this.toggleQueue(true);
                     break;
 
                 case 'off':
-                    this.isYoutubeActive = false;
-                    if(this.youtubeLoopInterval != null)
-                        clearInterval(this.youtubeLoopInterval);
+                    this.toggleQueue(false);
                     break;
 
                 case 'list':
@@ -196,10 +169,59 @@ class Bot {
         const dispatcher = await this.VoiceConnection.play(process.env.REPOSITORY_PATH + "playsounds/" + fileName + '.mp3', { volume: 0.5 });
     }
 
+    toggleQueue(mode){
+        if(mode){
+            if(this.VoiceConnection != null) {
+                this.activateYoutubeQueue();
+            }
+            else {
+                return "You should invite me to voice channel first!";
+            }
+        }
+        else{
+            this.isYoutubeActive = false;
+            if(this.youtubeLoopInterval != null)
+                clearInterval(this.youtubeLoopInterval);
+        }
+
+        return "";
+    }
+
+    addToYoutubeQueue(url){
+        this.youtubeQueue.push(url);
+    }
+
     playNextFromYoutubeQueue() {
         if(this.youtubeQueue.length > 0) {
             this.currentDispatcher = this.VoiceConnection.play(ytdl(this.youtubeQueue[0], { filter: 'audioonly'}), { volume: 0.2 });
+            this.writeYoutubeToHistory(this.youtubeQueue[0]);
+        }else{
+            this.toggleQueue(false);
         }
+    }
+
+    writeYoutubeToHistory(url){
+        ytdl.getBasicInfo(url, (error, info) => {
+            var title = info.player_response.videoDetails.title;
+            fs.readFile(process.env.REPOSITORY_PATH + "YoutubeHistory.json", (err, data) => {
+                let history = JSON.parse(data);
+                history["timeline"].push({title: title, url: url});
+                let dataToWrite = JSON.stringify(history, null, 4);
+                fs.writeFileSync(process.env.REPOSITORY_PATH + "YoutubeHistory.json", dataToWrite);
+            });
+        });
+    }
+
+    getYoutubeHistory(){
+        console.log("Here2");
+        return new Promise(resolve => {
+            console.log("here3");
+            fs.readFile(process.env.REPOSITORY_PATH + "YoutubeHistory.json", (err, data) => {
+                var history = JSON.parse(data);
+                console.log(history);
+                resolve(history);
+            });
+        });
     }
 
     activateYoutubeQueue() {

@@ -48,14 +48,21 @@ html
       div(class="row")
         hr(class="col-12")
 
-      h3 Queue
+      if queue.length > 0
+        h3 Queue
+          div(class='row')
+            each value, index in queue
+              div(class="col-12 col-md-4  p-3")
+                form(action="/youtube/delete/" + index  method="POST")
+                  button(type="submit" class="btn btn-danger")  X 
+                div(class="embed-responsive embed-responsive-16by9")
+                  iframe(class="embed-responsive-item" src=value.replace("watch?v=", "embed/") allowfullscreen)
+
+      h3 History
       div(class='row')
-          each value, index in queue
-            div(class="col-12 col-md-4  p-3")
-              form(action="/youtube/delete/" + index  method="POST")
-                button(type="submit" class="btn btn-danger")  X 
-              div(class="embed-responsive embed-responsive-16by9")
-                iframe(class="embed-responsive-item" src=value.replace("watch?v=", "embed/") allowfullscreen)
+          each value in history
+            div(class="col-12")
+              a(href=value.url)=value.title
 
 
       
